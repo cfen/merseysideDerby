@@ -1,24 +1,26 @@
 import reqwest from 'reqwest'
-import _ from 'underscore'
+import _ from 'lodash'
 import mainHTML from './text/main.html!text'
 import results from  '../assets/data/results.json!json';
+import topScorers from  '../assets/data/scorers.json!json';
 import share from './lib/share'
+import LineChart from './football/LineChart';
 
 import { getDecade, getMonthNum, getDayNum, getSeason } from './lib/dateCustom'
 
 var shareFn = share('Interactive title', 'http://gu.com/p/URL', '#Interactive');
-var resultsData;
+var resultsData, goalsArr, pensArr, cardsArr;
 
 
 export function init(el, context, config, mediator) {
     el.innerHTML = mainHTML.replace(/%assetPath%/g, config.assetPath);
 
-    reqwest({
-        url: 'http://ip.jsontest.com/',
-        type: 'json',
-        crossOrigin: true,
-        success: (resp) => initData()
-    });
+        reqwest({
+            url: 'http://ip.jsontest.com/',
+            type: 'json',
+            crossOrigin: true,
+            success: (resp) => initData()
+        });
 
     [].slice.apply(el.querySelectorAll('.interactive-share')).forEach(shareEl => {
         var network = shareEl.getAttribute('data-network');
@@ -31,12 +33,17 @@ function initData(){
     resultsData = [];
 
         _.each(rawData, function(o){
-            var newObj = modelObj(o)
-
-            resultsData.push(newObj)
+            var newObj = modelObj(o);
+            resultsData.push(newObj);
         })
 
-    console.log(resultsData)
+    goalsArr = tallyScorers(resultsData);
+    pensArr = tallyPens(resultsData);
+    cardsArr = tallyCards(resultsData);
+
+
+    console.log(cardsArr)
+
 }
 
 
@@ -57,7 +64,7 @@ function modelObj(o){
         t.Venue = o.Venue;
         
         t.year = o.Date.split("/")[2];
-        t.sortDate = o.Date.split("/")[2]+o.Date.split("/")[1]+o.Date.split("/")[0];
+        t.sortDate = Number(o.Date.split("/")[2]+o.Date.split("/")[1]+o.Date.split("/")[0]);
         t.season = getSeason(o.Date,"/");  
 
         t.homeScorers = tally(t,"H","goals");
@@ -65,6 +72,8 @@ function modelObj(o){
 
         t.homeRedCards = tally(t,"H","cards");
         t.awayRedCards = tally(t,"A","cards");
+
+        t.attendanceNum = Number(o.Attendance.split(",").join(""));
   
 
     return t;
@@ -111,27 +120,127 @@ function tally(o,s,v){
         if (o.hometeam == "Liverpool" && s == "A" && v == "cards"){ arr = tallyArray( o.Everton_Red_cards ) }
         if (o.hometeam == "Everton" && s == "A" && v == "cards"){ arr = tallyArray( o.Liverpool_Red_cards ) } 
 
-        
-
     return arr
 
 }
 
-function tallyArray( o ){
-    var a = o.split(",");
+function tallyArray( s ){
+    var a = s.split(",");
     var arr = [ ];
 
-    _.each(a, function(str){
-        str = str.trim();
-        if (str.includes('(2 pens.)')) { var newStr = str.split(" ")[0]+"(pen.)"; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr);}
-        if (str.includes('(2)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr);};
-        if (str.includes('(3)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); arr.push(newStr);};
-        if (str.includes('(4)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); arr.push(newStr); arr.push(newStr); };
-        if (!str.includes('(2)') && !str.includes('(2 pens.)') && !str.includes('(3)')  && !str.includes('(4)') && str != '') { arr.push(str) }
-    })
+        _.each(a, function(str){
+            str = str.trim();
+            if (str.includes('(2 pens.)')) { var newStr = str.split(" ")[0]+" (pen.)"; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); }
+            if (str.includes('(2 - 1 pen.)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr+" (pen.)"); arr.push(newStr); }
+            if (str.includes('(2)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); }
+            if (str.includes('(3)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); arr.push(newStr); }
+            if (str.includes('(4)')) { var newStr = str.split(" ")[0]; newStr = newStr.trim(); arr.push(newStr); arr.push(newStr); arr.push(newStr); arr.push(newStr); }
+            if (!str.includes('(2)') && !str.includes('(2 pens.)') && !str.includes('(3)')  && !str.includes('(4)') && str != '') { arr.push(str); }
+        })
 
     return arr
+
 }
+
+
+function tallyScorers(a){
+    var t = [];
+    pensArr = [];
+
+        _.each(a, function(o){
+             var lArr = tallyArray(o.Liverpool_Scorers);
+             var eArr = tallyArray(o.Everton_Scorers);           
+
+                 _.each(lArr, function(scorer){
+                    var tObj = {}               
+                    tObj.player = scorer
+                    tObj.goalTo = "Liverpool"
+                    tObj.d = o
+                    t.push(tObj)
+                 })
+
+                 _.each(eArr, function(scorer){
+                    var tObj = {}               
+                    tObj.player = scorer
+                    tObj.goalTo = "Everton"
+                    tObj.d = o
+                    t.push(tObj)                  
+                 })
+
+        } )
+
+   return t     
+
+}
+
+function tallyPens(a){
+    var t = [];
+
+        _.each(a, function(o){
+             var lArr = tallyArray(o.Liverpool_Scorers);
+             var eArr = tallyArray(o.Everton_Scorers);           
+
+                 _.each(lArr, function(scorer){
+                    
+                    if (scorer.includes('(pen.)')){ 
+                        var tObj = {} 
+                        tObj.player = scorer.split(" ")[0];
+                        tObj.penaltyTo = "Liverpool"; 
+                        tObj.d = o;
+                        t.push(tObj) 
+                    }
+
+                 })
+
+                 _.each(eArr, function(scorer){
+                    
+                    if (scorer.includes('(pen.)')){ 
+                            var tObj = {} 
+                            tObj.player = scorer.split(" ")[0];
+                            tObj.penaltyTo = "Everton"; 
+                            tObj.d = o;
+                            t.push(tObj)  
+                        }
+                 })
+
+        } )
+
+   return t     
+
+}
+
+
+function tallyCards(a){
+    var t = [];
+
+        _.each(a, function(o){
+             var lArr = tallyArray(o.Liverpool_Red_cards);
+             var eArr = tallyArray(o.Everton_Red_cards);           
+
+                 _.each(lArr, function(player){
+                    var tObj = {} 
+                    tObj.player = player;
+                    tObj.cardTo = "Liverpool"; 
+                    tObj.d = o;
+                    t.push(tObj) 
+                 })
+
+                 _.each(eArr, function(player){
+                    var tObj = {} 
+                    tObj.player = player;
+                    tObj.cardTo = "Everton"; 
+                    tObj.d = o;
+                    t.push(tObj) 
+                 })
+
+        } )
+
+   return t;  
+
+}
+
+
+
 
 
 // Attendance:"44,450"
