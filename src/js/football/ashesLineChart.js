@@ -1,7 +1,5 @@
-function LineChart(customData,options) {
-	varIn = 'nHomeGoals'
-
-	data = options.series
+function LineChart(data,options) {
+	console.log(options.series)
 	var container = d3.select(options.container);
 
 	var viz=container.append("div").attr("class","timeline-chart");
@@ -19,18 +17,26 @@ function LineChart(customData,options) {
     	bottom:25
     };
 
+    var tooltip=new Tooltip({
+    	container:viz.node(),
+    	margins:margins,
+    	info:options.info,
+    	teams:options.teams
+    })
+
     var extents;
 
     function setExtents() {
 		extents={
-			index:[0,data.length-1],
-			date:d3.extent(data,function(d){
-				return d.dateObj;
+			index:[0,options.series.length-1],
+			date:d3.extent(options.series,function(d){
+				return d.date;
 			}),
 			customVals:[
 				0,
-				d3.max(data,function(d){					
-					return Math.max(d[varIn]);
+				d3.max(options.series,function(d){
+					
+					return Math.max(d.attendanceNum);
 				})
 			]
 		};
@@ -38,18 +44,19 @@ function LineChart(customData,options) {
 	};
 
 	setExtents();
+
 	
 
-	var periods=getPeriods(data);
+	var periods=getPeriods(options.series);
 	
-	console.log(extents)
+	console.log(periods)
 	
 	var svg=viz.append("svg")
 				.attr("width","100%")
 				.attr("height","100%");
 			addPattern(svg);
 
-	var timeline_g = svg.append("g")
+	var timeline_g=svg.append("g")
 					.attr("class","lines")
 					.attr("transform","translate("+(margins.left)+","+margins.top+")"),
 		axes=svg.append("g")
@@ -64,28 +71,28 @@ function LineChart(customData,options) {
 	var line = d3.svg.line()
 				    .x(function(d) { return xscale(d.date); })
 				    .y(function(d) { 
-				   
+				    	////console.log(d.date,d.customVals)
 				    	return yscale(d.customVals); 
 				    })
 				    //.interpolate("basis")
 				    .interpolate("step-after");
 
 	
-	// var notes=timeline_g
-	// 		.append("g")
-	// 			.attr("class","notes")
-	// 		.selectAll("g.note")
-	// 			.data(data.filter(function(d){
-	// 				return typeof d.notes != "undefined";
-	// 			}))
-	// 			.enter()
-	// 			.append("g")
-	// 				.attr("class","note")
-	// 				.attr("transform",function(d){
-	// 					var x=Math.round(xscale(d.dateObj)),
-	// 						y=yscale(Math.max(d[varIn]))
-	// 					return "translate("+x+","+(y-40)+")";
-	// });
+	var notes=timeline_g
+			.append("g")
+				.attr("class","notes")
+			.selectAll("g.note")
+				.data(data.filter(function(d){
+					return typeof d.values.notes != "undefined";
+				}))
+				.enter()
+				.append("g")
+					.attr("class","note")
+					.attr("transform",function(d){
+						var x=Math.round(xscale(d.values.dateObj)),
+							y=yscale(Math.max(d.values.attendanceNum))
+						return "translate("+x+","+(y-40)+")";
+					});
 	/*
 	notes.append("line")
 			.attr("x1",0)
@@ -97,7 +104,7 @@ function LineChart(customData,options) {
 		.attr("cy",0)
 		.attr("r",2.5)*/
 	var teams=timeline_g.selectAll("g.team")
-			.data(["Liverpool","Everton"])
+			.data(["LIV","EVE"])
 			.enter()
 			.append("g")
 				.attr("class",function(d){
@@ -120,41 +127,41 @@ function LineChart(customData,options) {
 			.attr("d",function(p){
 				
 				return line(p.period.map(function(d){
-
+					console.log(d)
 					return {
 						date:d.dateObj,
-						customVals:d[varIn]
+						customVals:d.attendanceNum
 					}
 				}))
 			});
 
-	// svg.on("mousemove",function(d){
-	// 			var x=d3.mouse(this)[0];
+	svg.on("mousemove",function(d){
+				var x=d3.mouse(this)[0];
 
-	// 			x=Math.min(WIDTH-margins.right,x);
-	// 			var series=findBar(Math.round(xscale.invert(x-margins.left)))
+				x=Math.min(WIDTH-margins.right,x);
+				var series=findBar(Math.round(xscale.invert(x-margins.left)))
 				
-	// 			if(series) {
+				if(series) {
 					
-	// 				var status=data.find(function(d){
-	// 					return +d.values.date == +series.date;
-	// 				});
+					var status=data.find(function(d){
+						return +d.values.date == +series.date;
+					});
 
-	// 				tooltip.show(series,xscale(series.date),0,status);//yscale.range()[0]);
-	// 				highlightSeries(series.date);
-	// 			}
+					tooltip.show(series,xscale(series.date),0,status);//yscale.range()[0]);
+					highlightSeries(series.date);
+				}
 				
 
-	// 		})
-	// 		.on("mouseleave",function(d){
-	// 			highlightSeries();
-	// 			tooltip.hide();
-	// 		})
+			})
+			.on("mouseleave",function(d){
+				highlightSeries();
+				tooltip.hide();
+			})
 
 	function findBar(x) {
 		//console.log(x,new Date(x))
 		var i=0,
-			bar=data.find(function(d){
+			bar=options.series.find(function(d){
 				return d.date >= x;
 			});
 
@@ -163,15 +170,15 @@ function LineChart(customData,options) {
 	}
 	
 	var series=period.filter(function(d,i){
-
+		
 		return i%2;
-
 	}).selectAll("g.series")
-		.data(data)
+		.data(options.series)
 		.enter()
 			.append("g")
 			.attr("class","series")
 			.attr("transform",function(d){
+				console.log(d)
 				return "translate("+xscale(d.dateObj)+",0)";
 			})
 			.on("mouseenter",function(d){
@@ -180,12 +187,10 @@ function LineChart(customData,options) {
 			.append("line")
 				.attr("x1",0)
 				.attr("y1",function(s){
-					// console.log(s)
-
-					// var status=data.find(function(d){
-					// 	return +d.dateObj == +s.dateObj;
-					// });
-					return yscale(Math.max(s[varIn]))+1;
+					var status=data.find(function(d){
+						return +d.dateObj == +s.dateObj;
+					});
+					return yscale(Math.max(status.values["LIV"],status.values["EVE"]))+1;
 				})
 				.attr("x2",0)
 				.attr("y2",function(s){
@@ -196,7 +201,6 @@ function LineChart(customData,options) {
 					return yscale(status.values["EVE"])*/
 				})
 	function highlightSeries(date) {
-
 		if(!date) {
 			series.classed("highlight",false);
 		}
@@ -211,13 +215,13 @@ function LineChart(customData,options) {
 				return xscale(data[data.length-1].dateObj)
 			})
 			.attr("y",function(d){
-				return yscale(data[data.length-1][varIn])
+				return yscale(data[data.length-1].attendanceNum)
 			})
 			.attr("dy",function(d){
 				return -5;
 			})
 			.text(function(d){
-				return d
+				return "LIV"
 			})
 
 
@@ -242,7 +246,7 @@ function LineChart(customData,options) {
 							d2=data[data.length-1].dateObj,
 							dates=[+d1,+d2];
 
-						var years=d3.range((d2.getFullYear() - d1.getFullYear())).map(function(y){
+						var years=d3.range((d2.getFullYear() - d1.getFullYear())/20-1).map(function(y){
 							return (1882 - 1882%20)+(y+1)*20;
 						})
 
@@ -253,7 +257,7 @@ function LineChart(customData,options) {
 						return dates;
 
 					}())
-				    .tickFormat(tickFormat).ticks(6);
+				    .tickFormat(tickFormat)
 				    
 
 	var axis=axes.append("g")
@@ -261,45 +265,45 @@ function LineChart(customData,options) {
 			      .attr("transform", "translate("+0+"," + (yscale.range()[0]+3) + ")")
 			      .call(xAxis);
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww1")
-	// 		.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[0].values[periods[0].values.length-1].dateObj),
-	// 				x2=xscale(periods[1].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+	axis.append("rect")
+			.attr("class","ww ww1")
+			.attr("x",xscale(periods[0].values[periods[0].values.length-1].values.dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[0].values[periods[0].values.length-1].values.dateObj),
+					x2=xscale(periods[1].values[0].values.dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	axis.append("text")
 			.attr("class","ww ww1")
-			.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
+			.attr("x",xscale(periods[0].values[periods[0].values.length-1].values.dateObj))
 			.attr("y",0)
 			.attr("dx",2)
 			.attr("dy",-2)
 			.text("WW1")
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww2")
-	// 		.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
-	// 				x2=xscale(periods[2].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+	axis.append("rect")
+			.attr("class","ww ww2")
+			.attr("x",xscale(periods[1].values[periods[1].values.length-1].values.dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[1].values[periods[1].values.length-1].values.dateObj),
+					x2=xscale(periods[2].values[0].values.dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	axis.append("text")
 			.attr("class","ww ww2")
-			.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
+			.attr("x",xscale(periods[1].values[periods[1].values.length-1].values.dateObj))
 			.attr("y",0)
 			.attr("dx",2)
 			.attr("dy",-2)
@@ -315,7 +319,7 @@ function LineChart(customData,options) {
 
     	notes.attr("transform",function(d){
 						var x=Math.round(xscale(d.values.dateObj)),
-							y=yscale(Math.max(d.values[varIn]))
+							y=yscale(Math.max(d.values.attendanceNum))
 						return "translate("+x+","+(y-40)+")";
 				});
 
@@ -326,7 +330,7 @@ function LineChart(customData,options) {
 					return line(p.period.map(function(d){
 						return {
 							date:d.values.dateObj,
-							customVals:d.values[varIn]
+							customVals:d.values.attendanceNum
 						}
 					}))
 				});
@@ -336,7 +340,7 @@ function LineChart(customData,options) {
 					return xscale(data[data.length-1].values.dateObj)
 				})
 				.attr("y",function(team){
-					return yscale(data[data.length-1].values[varIn])
+					return yscale(data[data.length-1].values.attendanceNum)
 				});
 
 		axis.call(xAxis);
@@ -503,5 +507,4 @@ function addPattern(svg){
 		});
 }
 
-module.exports=LineChart;
 module.exports=LineChart;

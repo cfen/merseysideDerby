@@ -1,6 +1,4 @@
 function LineChart(customData,options) {
-	varIn = 'nHomeGoals'
-
 	data = options.series
 	var container = d3.select(options.container);
 
@@ -19,7 +17,15 @@ function LineChart(customData,options) {
     	bottom:25
     };
 
+    var tooltip=new Tooltip({
+    	container:viz.node(),
+    	margins:margins,
+    	info:options.info,
+    	teams:options.teams
+    })
+
     var extents;
+
 
     function setExtents() {
 		extents={
@@ -30,7 +36,7 @@ function LineChart(customData,options) {
 			customVals:[
 				0,
 				d3.max(data,function(d){					
-					return Math.max(d[varIn]);
+					return Math.max(d.attendanceNum);
 				})
 			]
 		};
@@ -64,28 +70,28 @@ function LineChart(customData,options) {
 	var line = d3.svg.line()
 				    .x(function(d) { return xscale(d.date); })
 				    .y(function(d) { 
-				   
+				    	////console.log(d.date,d.customVals)
 				    	return yscale(d.customVals); 
 				    })
 				    //.interpolate("basis")
 				    .interpolate("step-after");
 
 	
-	// var notes=timeline_g
-	// 		.append("g")
-	// 			.attr("class","notes")
-	// 		.selectAll("g.note")
-	// 			.data(data.filter(function(d){
-	// 				return typeof d.notes != "undefined";
-	// 			}))
-	// 			.enter()
-	// 			.append("g")
-	// 				.attr("class","note")
-	// 				.attr("transform",function(d){
-	// 					var x=Math.round(xscale(d.dateObj)),
-	// 						y=yscale(Math.max(d[varIn]))
-	// 					return "translate("+x+","+(y-40)+")";
-	// });
+	var notes=timeline_g
+			.append("g")
+				.attr("class","notes")
+			.selectAll("g.note")
+				.data(data.filter(function(d){
+					return typeof d.notes != "undefined";
+				}))
+				.enter()
+				.append("g")
+					.attr("class","note")
+					.attr("transform",function(d){
+						var x=Math.round(xscale(d.dateObj)),
+							y=yscale(Math.max(d.attendanceNum))
+						return "translate("+x+","+(y-40)+")";
+					});
 	/*
 	notes.append("line")
 			.attr("x1",0)
@@ -97,7 +103,7 @@ function LineChart(customData,options) {
 		.attr("cy",0)
 		.attr("r",2.5)*/
 	var teams=timeline_g.selectAll("g.team")
-			.data(["Liverpool","Everton"])
+			.data(["LIV","EVE"])
 			.enter()
 			.append("g")
 				.attr("class",function(d){
@@ -123,7 +129,7 @@ function LineChart(customData,options) {
 
 					return {
 						date:d.dateObj,
-						customVals:d[varIn]
+						customVals:d.attendanceNum
 					}
 				}))
 			});
@@ -163,8 +169,10 @@ function LineChart(customData,options) {
 	}
 	
 	var series=period.filter(function(d,i){
+		
 
 		return i%2;
+
 
 	}).selectAll("g.series")
 		.data(data)
@@ -185,7 +193,7 @@ function LineChart(customData,options) {
 					// var status=data.find(function(d){
 					// 	return +d.dateObj == +s.dateObj;
 					// });
-					return yscale(Math.max(s[varIn]))+1;
+					return yscale(Math.max(s.attendanceNum))+1;
 				})
 				.attr("x2",0)
 				.attr("y2",function(s){
@@ -211,13 +219,13 @@ function LineChart(customData,options) {
 				return xscale(data[data.length-1].dateObj)
 			})
 			.attr("y",function(d){
-				return yscale(data[data.length-1][varIn])
+				return yscale(data[data.length-1].attendanceNum)
 			})
 			.attr("dy",function(d){
 				return -5;
 			})
 			.text(function(d){
-				return d
+				return "LIV"
 			})
 
 
@@ -238,11 +246,13 @@ function LineChart(customData,options) {
 				    .orient("bottom")
 					.tickValues(function(){
 
+						console.log(data)
+
 						var d1=data[0].dateObj,
 							d2=data[data.length-1].dateObj,
 							dates=[+d1,+d2];
 
-						var years=d3.range((d2.getFullYear() - d1.getFullYear())).map(function(y){
+						var years=d3.range((d2.getFullYear() - d1.getFullYear())/20-1).map(function(y){
 							return (1882 - 1882%20)+(y+1)*20;
 						})
 
@@ -253,7 +263,7 @@ function LineChart(customData,options) {
 						return dates;
 
 					}())
-				    .tickFormat(tickFormat).ticks(6);
+				    .tickFormat(tickFormat)
 				    
 
 	var axis=axes.append("g")
@@ -261,19 +271,19 @@ function LineChart(customData,options) {
 			      .attr("transform", "translate("+0+"," + (yscale.range()[0]+3) + ")")
 			      .call(xAxis);
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww1")
-	// 		.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[0].values[periods[0].values.length-1].dateObj),
-	// 				x2=xscale(periods[1].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+	axis.append("rect")
+			.attr("class","ww ww1")
+			.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[0].values[periods[0].values.length-1].dateObj),
+					x2=xscale(periods[1].values[0].dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	axis.append("text")
 			.attr("class","ww ww1")
@@ -283,19 +293,19 @@ function LineChart(customData,options) {
 			.attr("dy",-2)
 			.text("WW1")
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww2")
-	// 		.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
-	// 				x2=xscale(periods[2].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+	axis.append("rect")
+			.attr("class","ww ww2")
+			.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
+					x2=xscale(periods[2].values[0].dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	axis.append("text")
 			.attr("class","ww ww2")
@@ -315,7 +325,7 @@ function LineChart(customData,options) {
 
     	notes.attr("transform",function(d){
 						var x=Math.round(xscale(d.values.dateObj)),
-							y=yscale(Math.max(d.values[varIn]))
+							y=yscale(Math.max(d.values.attendanceNum))
 						return "translate("+x+","+(y-40)+")";
 				});
 
@@ -326,7 +336,7 @@ function LineChart(customData,options) {
 					return line(p.period.map(function(d){
 						return {
 							date:d.values.dateObj,
-							customVals:d.values[varIn]
+							customVals:d.values.attendanceNum
 						}
 					}))
 				});
@@ -336,7 +346,7 @@ function LineChart(customData,options) {
 					return xscale(data[data.length-1].values.dateObj)
 				})
 				.attr("y",function(team){
-					return yscale(data[data.length-1].values[varIn])
+					return yscale(data[data.length-1].values.attendanceNum)
 				});
 
 		axis.call(xAxis);
@@ -503,5 +513,4 @@ function addPattern(svg){
 		});
 }
 
-module.exports=LineChart;
 module.exports=LineChart;

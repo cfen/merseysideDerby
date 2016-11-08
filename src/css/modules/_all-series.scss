@@ -32,20 +32,20 @@
 					stroke-opacity:1;
 				}
 			}
-			.EN {
+			.Liverpool {
 				path {
-					stroke:$EN;
+					stroke:$Liverpool;
 				}
 				text.status {
-					fill:$EN;	
+					fill:$Liverpool;	
 				}
 			}
-			.AU {
+			.Everton {
 				path {
-					stroke:$AU;
+					stroke:$Everton;
 				}
 				text.status {
-					fill:$AU;	
+					fill:$Everton;	
 				}
 			}
 			
@@ -161,11 +161,11 @@
 				@include fs-header(1);
 				margin: 0 0 5px;
 
-				b.EN {
-					color:$EN;
+				b.Liverpool {
+					color:$Liverpool;
 				}
-				b.AU {
-					color:$AU;
+				b.Everton {
+					color:$Everton;
 				}
 			}
 		}

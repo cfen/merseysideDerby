@@ -1,5 +1,7 @@
 import reqwest from 'reqwest'
 import _ from 'lodash'
+import d3 from './lib/d3.min_04_30_15.js'
+
 import mainHTML from './text/main.html!text'
 import results from  '../assets/data/results.json!json';
 import topScorers from  '../assets/data/scorers.json!json';
@@ -8,8 +10,10 @@ import LineChart from './football/LineChart';
 
 import { getDecade, getMonthNum, getDayNum, getSeason } from './lib/dateCustom'
 
+
 var shareFn = share('Interactive title', 'http://gu.com/p/URL', '#Interactive');
-var resultsData, goalsArr, pensArr, cardsArr;
+var results_data, goals_data, pens_data, cards_data, series_data;
+var date_format = d3.time.format("%d %b %Y");
 
 
 export function init(el, context, config, mediator) {
@@ -22,27 +26,46 @@ export function init(el, context, config, mediator) {
             success: (resp) => initData()
         });
 
-    [].slice.apply(el.querySelectorAll('.interactive-share')).forEach(shareEl => {
-        var network = shareEl.getAttribute('data-network');
-        shareEl.addEventListener('click',() => shareFn(network));
-    });
+    // [].slice.apply(el.querySelectorAll('.interactive-share')).forEach(shareEl => {
+    //     var network = shareEl.getAttribute('data-network');
+    //     shareEl.addEventListener('click',() => shareFn(network));
+    // });
 }
 
 function initData(){
+
+
     var rawData = results.sheets.results;
-    resultsData = [];
+
+    results_data = series_data = [];
 
         _.each(rawData, function(o){
             var newObj = modelObj(o);
-            resultsData.push(newObj);
+            results_data.push(newObj);
         })
 
-    goalsArr = tallyScorers(resultsData);
-    pensArr = tallyPens(resultsData);
-    cardsArr = tallyCards(resultsData);
+    goals_data = tallyScorers(results_data);
+    pens_data = tallyPens(results_data);
+    cards_data = tallyCards(results_data);
 
+    series_data.forEach(function(results_data,i){
+            if(series_data[i+1]) {
+                results_data.nextdate=series_data[i+1].date;
+            };
+        })
 
-    console.log(cardsArr)
+    //console.log(series_data)
+
+    var linechart=new LineChart(cards_data,{
+            series:series_data,
+            container:"#timeline",
+            teams:{
+                    "LIV":"Liverpool",
+                    "EVE":"Everton"
+                }
+        });
+
+    
 
 }
 
@@ -60,18 +83,31 @@ function modelObj(o){
         };
 
         t.hometeam = getHomeTeam(o, t.score);
+        t.awayteam = getAwayTeam(t.hometeam);
         //t.score = o.Score;
         t.Venue = o.Venue;
         
-        t.year = o.Date.split("/")[2];
+        t.year = Number(o.Date.split("/")[2]);
+        t.month = Number(o.Date.split("/")[1])-1;
+        t.day = Number(o.Date.split("/")[0]);
+        t.dateObj = new Date(t.year,t.month,t.day);
+
+        t.date = date_format(t.dateObj);
+
         t.sortDate = Number(o.Date.split("/")[2]+o.Date.split("/")[1]+o.Date.split("/")[0]);
         t.season = getSeason(o.Date,"/");  
 
         t.homeScorers = tally(t,"H","goals");
-        t.awayScorers = tally(t,"A","goals");
+        t.homeScorers = tally(t,"A","goals");
 
         t.homeRedCards = tally(t,"H","cards");
         t.awayRedCards = tally(t,"A","cards");
+
+        t.nHomeGoals = t.homeScorers.length;
+        t.nAwayGoals = t.homeScorers.length;
+
+        t.nHomeRedCards = t.homeRedCards.length;
+        t.nAwayRedCards = t.homeRedCards.length;
 
         t.attendanceNum = Number(o.Attendance.split(",").join(""));
   
@@ -88,6 +124,12 @@ function getHomeTeam(o, score){
         if (o.Venue != "Anfield" && o.Venue != "Goodison Park") { s = checkNeutralGround(o, score) }
 
     return s;
+}
+
+function getAwayTeam(s){
+    var op;
+    s == "Liverpool" ? op = "Everton" : op = "Liverpool";
+    return op;
 }
 
 function checkNeutralGround(o, score){
@@ -145,7 +187,6 @@ function tallyArray( s ){
 
 function tallyScorers(a){
     var t = [];
-    pensArr = [];
 
         _.each(a, function(o){
              var lArr = tallyArray(o.Liverpool_Scorers);
@@ -155,7 +196,7 @@ function tallyScorers(a){
                     var tObj = {}               
                     tObj.player = scorer
                     tObj.goalTo = "Liverpool"
-                    tObj.d = o
+                    tObj.values = o
                     t.push(tObj)
                  })
 
@@ -163,7 +204,7 @@ function tallyScorers(a){
                     var tObj = {}               
                     tObj.player = scorer
                     tObj.goalTo = "Everton"
-                    tObj.d = o
+                    tObj.values = o
                     t.push(tObj)                  
                  })
 
@@ -186,7 +227,7 @@ function tallyPens(a){
                         var tObj = {} 
                         tObj.player = scorer.split(" ")[0];
                         tObj.penaltyTo = "Liverpool"; 
-                        tObj.d = o;
+                        tObj.values = o;
                         t.push(tObj) 
                     }
 
@@ -198,7 +239,7 @@ function tallyPens(a){
                             var tObj = {} 
                             tObj.player = scorer.split(" ")[0];
                             tObj.penaltyTo = "Everton"; 
-                            tObj.d = o;
+                            tObj.values = o;
                             t.push(tObj)  
                         }
                  })
@@ -221,7 +262,7 @@ function tallyCards(a){
                     var tObj = {} 
                     tObj.player = player;
                     tObj.cardTo = "Liverpool"; 
-                    tObj.d = o;
+                    tObj.values = o;
                     t.push(tObj) 
                  })
 
@@ -229,7 +270,7 @@ function tallyCards(a){
                     var tObj = {} 
                     tObj.player = player;
                     tObj.cardTo = "Everton"; 
-                    tObj.d = o;
+                    tObj.values = o;
                     t.push(tObj) 
                  })
 
