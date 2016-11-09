@@ -34,19 +34,26 @@ export function init(el, context, config, mediator) {
 
 function initData(){
 
-
     var rawData = results.sheets.results;
+    var penCountLiv = 0, cardCountLiv = 0, penCountEve = 0, cardCountEve = 0; 
 
     results_data = series_data = [];
+
+
 
         _.each(rawData, function(o){
             var newObj = modelObj(o);
             results_data.push(newObj);
         })
 
+
     goals_data = tallyScorers(results_data);
     pens_data = tallyPens(results_data);
     cards_data = tallyCards(results_data);
+
+    _.each(cards_data, function(o){
+        //console.log(o)
+    })
 
     series_data.forEach(function(results_data,i){
             if(series_data[i+1]) {
@@ -54,7 +61,7 @@ function initData(){
             };
         })
 
-    //console.log(series_data)
+    
 
     var linechart=new LineChart(cards_data,{
             series:series_data,
@@ -97,17 +104,17 @@ function modelObj(o){
         t.sortDate = Number(o.Date.split("/")[2]+o.Date.split("/")[1]+o.Date.split("/")[0]);
         t.season = getSeason(o.Date,"/");  
 
-        t.homeScorers = tally(t,"H","goals");
-        t.homeScorers = tally(t,"A","goals");
+        t.liverpoolScorers = tally(t,"Liverpool","goals");
+        t.evertonScorers = tally(t,"Everton","goals");
 
-        t.homeRedCards = tally(t,"H","cards");
-        t.awayRedCards = tally(t,"A","cards");
+        t.liverpoolRedCards = tally(t,"Liverpool","cards");
+        t.evertonRedCards = tally(t,"Everton","cards");
 
-        t.nHomeGoals = t.homeScorers.length;
-        t.nAwayGoals = t.homeScorers.length;
+        t.nLiverpoolGoals = t.liverpoolScorers.length;
+        t.nEvertonGoals = t.evertonScorers.length;
 
-        t.nHomeRedCards = t.homeRedCards.length;
-        t.nAwayRedCards = t.homeRedCards.length;
+        t.nLiverpoolRedCards = t.liverpoolRedCards.length;
+        t.nEvertonRedCards = t.evertonRedCards.length;
 
         t.attendanceNum = Number(o.Attendance.split(",").join(""));
   
@@ -152,15 +159,15 @@ function tally(o,s,v){
 
         //if (o.Venue !=  "Anfield" && o.Venue != "Goodison Park") { handleNeutral(o) }  
 
-        if (o.hometeam == "Liverpool" && s == "H" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers) }
-        if (o.hometeam == "Everton" && s == "H" && v == "goals"){ arr = tallyArray( o.Everton_Scorers ) }
-        if (o.hometeam == "Liverpool" && s == "A" && v == "goals"){ arr = tallyArray( o.Everton_Scorers ) }
-        if (o.hometeam == "Everton" && s == "A" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers ) }
+        if (o.hometeam == "Liverpool" && s == "Liverpool" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers) }
+        if (o.awayteam == "Liverpool" && s == "Liverpool" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers ) }
+        if (o.hometeam == "Everton" && s == "Everton" && v == "goals"){ arr = tallyArray( o.Everton_Scorers ) }
+        if (o.awayteam == "Everton" && s == "Everton" && v == "goals"){ arr = tallyArray( o.Everton_Scorers ) }
 
-        if (o.hometeam == "Liverpool" && s == "H" && v == "cards"){ arr = tallyArray( o.Liverpool_Red_cards) }
-        if (o.hometeam == "Everton" && s == "H" && v == "cards"){ arr = tallyArray( o.Everton_Red_cards ) }
-        if (o.hometeam == "Liverpool" && s == "A" && v == "cards"){ arr = tallyArray( o.Everton_Red_cards ) }
-        if (o.hometeam == "Everton" && s == "A" && v == "cards"){ arr = tallyArray( o.Liverpool_Red_cards ) } 
+        if (o.hometeam == "Liverpool" && s == "Liverpool" && v == "cards"){ arr = tallyArray( o.Liverpool_Red_cards) }
+        if (o.awayteam == "Liverpool" && s == "Liverpool" && v == "cards"){ arr = tallyArray( o.Liverpool_Red_cards ) }
+        if (o.hometeam == "Everton" && s == "Everton" && v == "cards"){ arr = tallyArray( o.Everton_Red_cards ) }
+        if (o.awayteam == "Everton" && s == "Everton" && v == "cards"){ arr = tallyArray( o.Everton_Red_cards ) } 
 
     return arr
 
@@ -220,13 +227,14 @@ function tallyPens(a){
         _.each(a, function(o){
              var lArr = tallyArray(o.Liverpool_Scorers);
              var eArr = tallyArray(o.Everton_Scorers);           
-
+                //var penCount
                  _.each(lArr, function(scorer){
                     
                     if (scorer.includes('(pen.)')){ 
                         var tObj = {} 
                         tObj.player = scorer.split(" ")[0];
-                        tObj.penaltyTo = "Liverpool"; 
+                        tObj.penaltyTo = "Liverpool";
+                        tObj.date  = o.date;
                         tObj.values = o;
                         t.push(tObj) 
                     }
@@ -239,12 +247,17 @@ function tallyPens(a){
                             var tObj = {} 
                             tObj.player = scorer.split(" ")[0];
                             tObj.penaltyTo = "Everton"; 
+                            tObj.date  = o.date;
                             tObj.values = o;
                             t.push(tObj)  
                         }
                  })
 
         } )
+
+        _.each(t, function(o){
+            console.log("WORK HERE -"+o)
+        })
 
    return t     
 

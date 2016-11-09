@@ -1,5 +1,5 @@
 function LineChart(customData,options) {
-	varIn = 'nHomeGoals'
+	varIn = 'nEvertonRedCards'
 
 	data = options.series
 	var container = d3.select(options.container);
@@ -18,6 +18,13 @@ function LineChart(customData,options) {
     	top:40,
     	bottom:25
     };
+
+    var tooltip=new Tooltip({
+    	container:viz.node(),
+    	margins:margins,
+    	info:options.info,
+    	teams:options.teams
+    })
 
     var extents;
 
@@ -128,28 +135,28 @@ function LineChart(customData,options) {
 				}))
 			});
 
-	// svg.on("mousemove",function(d){
-	// 			var x=d3.mouse(this)[0];
+	svg.on("mousemove",function(d){
+				var x=d3.mouse(this)[0];
 
-	// 			x=Math.min(WIDTH-margins.right,x);
-	// 			var series=findBar(Math.round(xscale.invert(x-margins.left)))
+				x=Math.min(WIDTH-margins.right,x);
+				var series=findBar(Math.round(xscale.invert(x-margins.left)))
 				
-	// 			if(series) {
+				if(series) {
 					
-	// 				var status=data.find(function(d){
-	// 					return +d.values.date == +series.date;
-	// 				});
+					var status=data.find(function(d){
+						return +d.values.date == +series.date;
+					});
 
-	// 				tooltip.show(series,xscale(series.date),0,status);//yscale.range()[0]);
-	// 				highlightSeries(series.date);
-	// 			}
+					tooltip.show(series,xscale(series.date),0,status);//yscale.range()[0]);
+					highlightSeries(series.date);
+				}
 				
 
-	// 		})
-	// 		.on("mouseleave",function(d){
-	// 			highlightSeries();
-	// 			tooltip.hide();
-	// 		})
+			})
+			.on("mouseleave",function(d){
+				highlightSeries();
+				tooltip.hide();
+			})
 
 	function findBar(x) {
 		//console.log(x,new Date(x))
@@ -229,11 +236,12 @@ function LineChart(customData,options) {
 			// })
 
 	function tickFormat(d){
-		console.log("tickFormat",d)
+		
     	return d3.time.format("%Y")(new Date(d));
     }
 
-	var xAxis = d3.svg.axis()
+
+	var tickNumber, xAxis = d3.svg.axis()
 				    .scale(xscale)
 				    .orient("bottom")
 					.tickValues(function(){
@@ -242,18 +250,23 @@ function LineChart(customData,options) {
 							d2=data[data.length-1].dateObj,
 							dates=[+d1,+d2];
 
-						var years=d3.range((d2.getFullYear() - d1.getFullYear())).map(function(y){
-							return (1882 - 1882%20)+(y+1)*20;
-						})
+						var years=d3.range((d1.getFullYear() - d2.getFullYear())).map(function(y){
+							var t = " ";
+							
+								t = (1882 - 1882%20)+(y+1)*10;
 
+							return t;
+
+						})
+console.log(1882 - 1882%20, d1.getFullYear())
 						years.forEach(function(y){
 							dates.push(new Date(y,0,1));
 						})
-
+						tickNumber = dates.length - 1
 						return dates;
 
 					}())
-				    .tickFormat(tickFormat).ticks(6);
+				    .tickFormat(tickFormat).ticks(tickNumber);
 				    
 
 	var axis=axes.append("g")
@@ -261,41 +274,29 @@ function LineChart(customData,options) {
 			      .attr("transform", "translate("+0+"," + (yscale.range()[0]+3) + ")")
 			      .call(xAxis);
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww1")
-	// 		.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[0].values[periods[0].values.length-1].dateObj),
-	// 				x2=xscale(periods[1].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+			
 
 	axis.append("text")
 			.attr("class","ww ww1")
-			.attr("x",xscale(periods[0].values[periods[0].values.length-1].dateObj))
+			.attr("x",xscale(periods[2].values[periods[2].values.length-1].dateObj))
 			.attr("y",0)
 			.attr("dx",2)
 			.attr("dy",-2)
 			.text("WW1")
 
-	// axis.append("rect")
-	// 		.attr("class","ww ww2")
-	// 		.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
-	// 		.attr("width",function(){
-	// 			var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
-	// 				x2=xscale(periods[2].values[0].dateObj);
-	// 			return x2-x1;
-	// 		})
-	// 		.attr("y",-yscale.range()[0])
-	// 		.attr("height",yscale.range()[0])
-	// 		.style({
-	// 			fill:"url(#diagonalHatch)"
-	// 		})
+	axis.append("rect")
+			.attr("class","ww ww2")
+			.attr("x",xscale(periods[2].values[periods[2].values.length-1].dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[2].values[periods[2].values.length-1].dateObj),
+					x2=xscale(periods[1].values[0].dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	axis.append("text")
 			.attr("class","ww ww2")
@@ -304,6 +305,20 @@ function LineChart(customData,options) {
 			.attr("dx",2)
 			.attr("dy",-2)
 			.text("WW2")
+
+	axis.append("rect")
+			.attr("class","ww ww2")
+			.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
+			.attr("width",function(){
+				var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
+					x2=xscale(periods[0].values[0].dateObj);
+				return x2-x1;
+			})
+			.attr("y",-yscale.range()[0])
+			.attr("height",yscale.range()[0])
+			.style({
+				fill:"url(#diagonalHatch)"
+			})
 
 	this.update=update;
 
@@ -420,9 +435,9 @@ function LineChart(customData,options) {
 				series_status.html("&nbsp;")
 			}
 			
-			date.text(series.Year.replace("/"," - "))
-			location.text("Tour of "+options.teams[d.tour[0]]+" in "+options.teams[d.tour[1]])
-			result.text(winner);
+			date.text("TTip")//series.Year.replace("/"," - ")
+			location.text("Tour of ")
+			result.text("winner");
 
 			//console.log(x-10)
 
@@ -444,6 +459,10 @@ function LineChart(customData,options) {
 
 
 
+
+
+
+
 function getPeriods(timeData) {
 	
 	var ww1StartDate=new Date(1915,0,1),
@@ -455,6 +474,9 @@ function getPeriods(timeData) {
 				.key(function(d){
 					
 					if(+d.dateObj < +ww1StartDate) {
+						return "beforeWW1";
+					}
+					if(+d.dateObj > +ww1StartDate && d.dateObj < +ww1EndDate) {
 						return "beforeWW1";
 					}
 					if(+d.dateObj > +ww2EndDate) {
@@ -503,5 +525,4 @@ function addPattern(svg){
 		});
 }
 
-module.exports=LineChart;
 module.exports=LineChart;
