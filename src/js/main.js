@@ -13,7 +13,9 @@ import { getDecade, getMonthNum, getDayNum, getSeason } from './lib/dateCustom'
 
 var shareFn = share('Interactive title', 'http://gu.com/p/URL', '#Interactive');
 var results_data, goals_data, pens_data, cards_data, series_data;
+var LiverpoolCardsR = 0, EvertonCardsR = 0, LiverpoolPensR = 0, EvertonPensR = 0;
 var date_format = d3.time.format("%d %b %Y");
+
 
 
 export function init(el, context, config, mediator) {
@@ -52,7 +54,7 @@ function initData(){
     cards_data = tallyCards(results_data);
 
     _.each(cards_data, function(o){
-        //console.log(o)
+       console.log(o)
     })
 
     series_data.forEach(function(results_data,i){
@@ -75,6 +77,7 @@ function initData(){
     
 
 }
+
 
 
 function modelObj(o){
@@ -110,11 +113,21 @@ function modelObj(o){
         t.liverpoolRedCards = tally(t,"Liverpool","cards");
         t.evertonRedCards = tally(t,"Everton","cards");
 
-        t.nLiverpoolGoals = t.liverpoolScorers.length;
-        t.nEvertonGoals = t.evertonScorers.length;
+        t.LiverpoolGoalsN = t.liverpoolScorers.length;
+        t.EvertonGoalsN = t.evertonScorers.length;
 
-        t.nLiverpoolRedCards = t.liverpoolRedCards.length;
-        t.nEvertonRedCards = t.evertonRedCards.length;
+        t.LiverpoolRedCardsN = t.liverpoolRedCards.length;
+        t.EvertonRedCardsN = t.evertonRedCards.length;
+
+        LiverpoolCardsR += t.LiverpoolRedCardsN; 
+        EvertonCardsR += t.EvertonRedCardsN;
+        // LiverpoolPensR += t.LiverpoolPensN; 
+        // EvertonPensR += t.EvertonPensN;
+
+        t.LiverpoolCardsR = LiverpoolCardsR;
+        t.EvertonCardsR = EvertonCardsR;
+        // t.LiverpoolPensR = LiverpoolPensR;
+        // t.EvertonPensR = EvertonPensR;
 
         t.attendanceNum = Number(o.Attendance.split(",").join(""));
   

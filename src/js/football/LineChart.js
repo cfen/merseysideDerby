@@ -1,5 +1,9 @@
 function LineChart(customData,options) {
-	varIn = 'nEvertonRedCards'
+	var teamsArr = ["Liverpool","Everton"]
+
+	var tV = 'CardsR';
+
+	let varIn = 'EvertonCardsR'
 
 	data = options.series
 	var container = d3.select(options.container);
@@ -29,6 +33,8 @@ function LineChart(customData,options) {
     var extents;
 
     function setExtents() {
+    	var s = String(teamsArr[0]+tV)
+    	var ss = String(teamsArr[1]+tV)
 		extents={
 			index:[0,data.length-1],
 			date:d3.extent(data,function(d){
@@ -37,7 +43,7 @@ function LineChart(customData,options) {
 			customVals:[
 				0,
 				d3.max(data,function(d){					
-					return Math.max(d[varIn]);
+					return Math.max(d[s],d[ss]);
 				})
 			]
 		};
@@ -104,7 +110,7 @@ function LineChart(customData,options) {
 		.attr("cy",0)
 		.attr("r",2.5)*/
 	var teams=timeline_g.selectAll("g.team")
-			.data(["Liverpool","Everton"])
+			.data(teamsArr)
 			.enter()
 			.append("g")
 				.attr("class",function(d){
@@ -125,12 +131,13 @@ function LineChart(customData,options) {
 	
 	period.append("path")
 			.attr("d",function(p){
+				var s = String(p.team+tV);
 				
 				return line(p.period.map(function(d){
 
 					return {
 						date:d.dateObj,
-						customVals:d[varIn]
+						customVals:d[s]
 					}
 				}))
 			});
@@ -258,7 +265,7 @@ function LineChart(customData,options) {
 							return t;
 
 						})
-console.log(1882 - 1882%20, d1.getFullYear())
+				console.log(1882 - 1882%20, d1.getFullYear())
 						years.forEach(function(y){
 							dates.push(new Date(y,0,1));
 						})
@@ -337,11 +344,11 @@ console.log(1882 - 1882%20, d1.getFullYear())
     	period.select("path")
 				.attr("d",function(p){
 					//console.log(p);
-					
+					var s = String(p.team+tV);
 					return line(p.period.map(function(d){
 						return {
 							date:d.values.dateObj,
-							customVals:d.values[varIn]
+							customVals:d.values[s]
 						}
 					}))
 				});
