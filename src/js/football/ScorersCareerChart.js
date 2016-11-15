@@ -3,37 +3,40 @@ var date_format = d3.time.format("%d %b %Y");
 
 function ScorersCareerChart(data,options) {
 
-	console.log(data)
-
-
 	var margins={ top:1, right:0, bottom:0, left: 1 }
 	var xscale, yscale;
 	var newChart = d3.select(options.container).append("div").attr("class","small-multiple-holder")
 
 
 	for (var i=0; i < data.length; i++){
-
-
 		var d = data[i]
+	
 		var d3StartDate = date_format(d.startDate);
 		var d3EndDate = date_format(d.endDate);
 
-		// var line = d3.line()
-		//     .x(function(d) { return x(d.date); })
-		//     .y(function(d) { return y(d.goals); });
+		var startObj = { teamGoals: 0 , date: d3StartDate }
+		var endObj = { teamGoals: 0 , date: d3EndDate }
 
-		datum = data[i].values
-
-		console.log(datum)
+		var lineData = getLineData(startObj, endObj, d)
+		
+		var x = d3.time.scale().domain([d3StartDate,d3EndDate]).range([0, options.width]);
+		var y = d3.scale.linear().domain([0, options.maxGoals]).range([options.height, 0]);
 
 		var xscale=d3.scale.linear().domain([d3StartDate,d3EndDate]).rangeRound([0,options.width-(margins.left+margins.right)]),
 		yscale=d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]).nice();
+
+		var valueline = d3.svg.line()
+		    .x(function(d) { return x(d.date); })
+		    .y(function(d) { return y(d.teamGoals); });
+
 		// xscale.domain(d3Date);
 		// yscale.domain(options.maxGoals);
 		// xscale.range([0,options.width-(margins.left+margins.right)]);
 		// yscale.range([0,options.height-(margins.top+margins.bottom)]);
 
-		
+		var valueline = d3.svg.line()
+		    .x(function(d) { return x(d.date); })
+		    .y(function(d) { return y(d.teamGoals); });
 
 		var newSmallChart = newChart.append("div")
 			.attr("class","small-multiple")
@@ -49,10 +52,17 @@ function ScorersCareerChart(data,options) {
 		career_g=svg.append("g")
 					.attr("class","career")
 					.attr("transform","translate("+(margins.left)+","+margins.top+")"),
+
+		career_g.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(lineData));
 						
 		axes=svg.append("g")
 			.attr("class","axes")
 			.attr("transform","translate("+(margins.left)+","+margins.top+")")	
+
+
+
 
 		// g.append("path")
 		//       .datum(d)
@@ -173,6 +183,29 @@ function ScorersCareerChart(data,options) {
 
 	}
 
+function getLineData(startObj, endObj,  dataIn ){
+
+	var tempArr = [];
+	startObj.scorer = endObj.scorer = dataIn.values[0].scorer
+	startObj.oppoGoals = endObj.oppoGoals = 0
+	startObj.teamGoals = endObj.teamGoals = 0
+
+	tempArr.push (startObj);
+
+	for (var i=0; i< dataIn.values.length; i++){
+
+		tempArr.push(dataIn.values[i])
+	}
+
+	tempArr.push (startObj);
+
+	console.log(tempArr)
+
+	return tempArr;
 }
+
+}
+
+
 
 module.exports = ScorersCareerChart;

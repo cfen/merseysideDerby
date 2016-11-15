@@ -397,12 +397,11 @@ function modelPlayerChartsData(players){
             o.player = o.values[0].scorer
             o.team = o.values[0].goalTo
 
-            o.teamGoals = o.team == "Liverpool" ? o.values[0].values.LiverpoolGoalsN : o.values[0].values.EvertonGoalsN
-
-            o.oppoGoals = o.team == "Everton" ? o.values[0].values.LiverpoolGoalsN : o.values[0].values.EvertonGoalsN
-
-            console.log(o)
-          
+                _.each(o.values, function(obj){
+                    obj.teamGoals = o.team == "Liverpool" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN
+                    obj.oppoGoals = o.team == "Everton" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN  
+                })
+                  
             
         })
     })
