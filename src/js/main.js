@@ -3,19 +3,37 @@ import _ from 'lodash'
 import d3 from './lib/d3.min_04_30_15.js'
 
 import mainHTML from './text/main.html!text'
-import results from  '../assets/data/results.json!json';
-import topScorers from  '../assets/data/scorers.json!json';
-import share from './lib/share'
-import LineChart from './football/LineChart';
+import results from  '../assets/data/results.json!json'
+import Players from  '../assets/data/players.json!json'
+import dataUtils from './utils/data';
 
+
+import share from './lib/share'
+import LineChart from './football/LineChart'
+import Scorers from './football/Scorers'
+import CareerChart from './football/ScorersCareerChart'
 import { getDecade, getMonthNum, getDayNum, getSeason } from './lib/dateCustom'
+
+
+var grid={
+    row_height: 36,
+    column_width: 60,
+    gutter: 12,
+    margin: 20
+};
 
 
 var shareFn = share('Interactive title', 'http://gu.com/p/URL', '#Interactive');
 var results_data, goals_data, pens_data, cards_data, series_data;
-var LiverpoolCardsR = 0, EvertonCardsR = 0, LiverpoolPensR = 0, EvertonPensR = 0;
+var LiverpoolCardsR = 0, EvertonCardsR = 0, LiverpoolPensR = 0, EvertonPensR = 0; 
+
 var date_format = d3.time.format("%d %b %Y");
 
+var prev_date={
+    scorers:null
+};
+
+var players = Players;
 
 
 export function init(el, context, config, mediator) {
@@ -36,12 +54,9 @@ export function init(el, context, config, mediator) {
 
 function initData(){
 
-    var rawData = results.sheets.results;
-    var penCountLiv = 0, cardCountLiv = 0, penCountEve = 0, cardCountEve = 0; 
+    var rawData = results.sheets.results.reverse();
 
     results_data = series_data = [];
-
-
 
         _.each(rawData, function(o){
             var newObj = modelObj(o);
@@ -53,31 +68,83 @@ function initData(){
     pens_data = tallyPens(results_data);
     cards_data = tallyCards(results_data);
 
-    _.each(cards_data, function(o){
-       console.log(o)
+
+    _.each(goals_data, function(o){
+       o.player = o.player.split(" ");      
+       o.scorer = o.player[0];
     })
 
+    var goalsQty = _.groupBy(goals_data, 'scorer'); 
+    var scorers_data = []
+    
+        _.each(goalsQty, function(a,k){
+
+        if(a.length > 6){ 
+                var scorer = {}
+                scorer.key = k;
+                scorer.player = k;
+                scorer.goals = a.length;
+                scorer.goalsData = a;
+                scorer.scoringMatches = _.uniqBy(a, "date");
+                scorer.dateStart = getSeasonExtent("start", a[0].values.season);
+                scorer.dateEnd = getSeasonExtent("end", a[a.length-1].values.season);
+                //a.goalTo == "Everton" ? scorer.teamGoals = a.values.EvertonGoalsN : scorer.teamGoals = a.values.LiverpoolGoalsN; //scorer.teamGoals = 
+                scorers_data.push(scorer); 
+            }
+        })
+
     series_data.forEach(function(results_data,i){
+        LiverpoolCardsR+=series_data[i].LiverpoolRedCardsN;
+        EvertonCardsR+= series_data[i].EvertonRedCardsN;
+        // LiverpoolPensR+=
+        // EvertonPensR+=
+            //console.log(i,series_data[i].date)
             if(series_data[i+1]) {
                 results_data.nextdate=series_data[i+1].date;
             };
         })
 
-    
 
-    var linechart=new LineChart(cards_data,{
+    let linechart_cards=new LineChart(cards_data,{
             series:series_data,
-            container:"#timeline",
+            container:"#timelineCards",
             teams:{
                     "LIV":"Liverpool",
                     "EVE":"Everton"
                 }
         });
-
     
+    // let scorers = new Scorers(scorers_data,{
+    //             series:series_data,
+    //             container:"#timelineScorers",
+    //             teams:{
+    //                     "LIV":"Liverpool",
+    //                     "EVE":"Everton"
+    //                 }
+    //         });
+
+   
+
+    players=dataUtils.updatePlayers(players,scorers_data,cards_data); // add redcards and pens here -- batsmen_data,bowlers_data
+
+    modelPlayerChartsData(players)
+
+    // let linechart_pens=new LineChart(cards_data,{
+    //         series:series_data,
+    //         container:"#timelinePens",
+    //         teams:{
+    //                 "LIV":"Liverpool",
+    //                 "EVE":"Everton"
+    //             }
+    //     });
+
 
 }
 
+function getSeasonExtent(s,season){
+    var years=season.split("–");
+    return s =='start' ? new Date(Number(years[0]),6,14) :  new Date(Number(years[1]),6,15) ;
+}
 
 
 function modelObj(o){
@@ -130,7 +197,8 @@ function modelObj(o){
         // t.EvertonPensR = EvertonPensR;
 
         t.attendanceNum = Number(o.Attendance.split(",").join(""));
-  
+        
+        //console.log( t.date, t.LiverpoolCardsR )
 
     return t;
 
@@ -170,8 +238,6 @@ function tally(o,s,v){
 
     var arr;
 
-        //if (o.Venue !=  "Anfield" && o.Venue != "Goodison Park") { handleNeutral(o) }  
-
         if (o.hometeam == "Liverpool" && s == "Liverpool" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers) }
         if (o.awayteam == "Liverpool" && s == "Liverpool" && v == "goals"){ arr = tallyArray( o.Liverpool_Scorers ) }
         if (o.hometeam == "Everton" && s == "Everton" && v == "goals"){ arr = tallyArray( o.Everton_Scorers ) }
@@ -210,19 +276,24 @@ function tallyScorers(a){
 
         _.each(a, function(o){
              var lArr = tallyArray(o.Liverpool_Scorers);
-             var eArr = tallyArray(o.Everton_Scorers);           
+             var eArr = tallyArray(o.Everton_Scorers); 
 
                  _.each(lArr, function(scorer){
-                    var tObj = {}               
+
+                    var tObj = {}  
+                    tObj.date = o.date          
                     tObj.player = scorer
+                    tObj.season = o.season
                     tObj.goalTo = "Liverpool"
                     tObj.values = o
                     t.push(tObj)
                  })
 
                  _.each(eArr, function(scorer){
-                    var tObj = {}               
+                    var tObj = {}    
+                    tObj.date = o.date              
                     tObj.player = scorer
+                    tObj.season = o.season                    
                     tObj.goalTo = "Everton"
                     tObj.values = o
                     t.push(tObj)                  
@@ -240,9 +311,8 @@ function tallyPens(a){
         _.each(a, function(o){
              var lArr = tallyArray(o.Liverpool_Scorers);
              var eArr = tallyArray(o.Everton_Scorers);           
-                //var penCount
+       
                  _.each(lArr, function(scorer){
-                    
                     if (scorer.includes('(pen.)')){ 
                         var tObj = {} 
                         tObj.player = scorer.split(" ")[0];
@@ -305,6 +375,87 @@ function tallyCards(a){
    return t;  
 
 }
+
+
+function modelPlayerChartsData(players){
+
+    let a = players.scorers;
+
+    var scorers=[];
+
+    _.each(a, function (o){
+            var scorer = new Scorers(o)
+            scorers.push(scorer)
+
+    });
+
+    _.each(scorers, function(a){
+        
+        _.each(a, function(o,k){
+            o.startDate = getSeasonExtent("start", o.key)
+            o.endDate = getSeasonExtent("end", o.key)
+            o.player = o.values[0].scorer
+            o.team = o.values[0].goalTo
+
+            o.teamGoals = o.team == "Liverpool" ? o.values[0].values.LiverpoolGoalsN : o.values[0].values.EvertonGoalsN
+
+            o.oppoGoals = o.team == "Everton" ? o.values[0].values.LiverpoolGoalsN : o.values[0].values.EvertonGoalsN
+
+            console.log(o)
+          
+            
+        })
+    })
+
+    
+    addPlayerCharts(scorers)
+
+}
+
+function addPlayerCharts(a){
+    var options = { height: (grid.row_height * 2), width: ( grid.column_width*2 ), margin: grid.margin, gutter: grid.gutter,  maxGoals: 6 , container: "#scorers"}
+
+    _.each(a, function(o){
+        var smallMultiple = new CareerChart(o,options)
+      
+    })
+
+
+
+
+}
+
+
+function addCareerCharts(a){
+
+}
+
+
+
+
+//new CareerChart(a.filter(function(d){
+//                  return d.Player == player.key
+//              }),{
+//                      container:options.container,
+//                      name:player.key,
+//                      extents:extents,
+//                      indexed:true,
+//                      only_ashes:true,
+//                      type:"area",
+//                      info: options.players.find(function(d){
+//                          return d.id==player.key;
+//                      }),
+//                      teams:options.teams,
+//                      aggregates:d3.nest()
+//                                      .key(function(d){
+//                                          return d.Year;
+//                                      })
+//                                      .entries(options.aggregates)
+//                  }
+//              )
+//          );
+            
+
 
 
 

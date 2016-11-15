@@ -55,33 +55,29 @@ function LineChart(customData,options) {
 
 	var periods=getPeriods(data);
 	
-	console.log(extents)
-	
 	var svg=viz.append("svg")
 				.attr("width","100%")
 				.attr("height","100%");
 			addPattern(svg);
 
 	var timeline_g = svg.append("g")
-					.attr("class","lines")
-					.attr("transform","translate("+(margins.left)+","+margins.top+")"),
+				.attr("class","lines")
+				.attr("transform","translate("+(margins.left)+","+margins.top+")"),
 		axes=svg.append("g")
-					.attr("class","axes")
-					.attr("transform","translate("+(margins.left)+","+margins.top+")");
-
-	
+				.attr("class","axes")
+				.attr("transform","translate("+(margins.left)+","+margins.top+")");
 
 	var xscale=d3.scale.linear().domain(extents.date).range([0,WIDTH-(margins.left+margins.right)]),
 		yscale=d3.scale.linear().domain(extents.customVals).range([HEIGHT-(margins.top+margins.bottom),0]);
 
 	var line = d3.svg.line()
-				    .x(function(d) { return xscale(d.date); })
-				    .y(function(d) { 
-				   
-				    	return yscale(d.customVals); 
-				    })
-				    //.interpolate("basis")
-				    .interpolate("step-after");
+			    .x(function(d) { return xscale(d.date); })
+			    .y(function(d) { 
+			   
+			    	return yscale(d.customVals); 
+			    })
+			    //.interpolate("basis");
+			    .interpolate("step-after");
 
 	
 	// var notes=timeline_g
@@ -134,7 +130,7 @@ function LineChart(customData,options) {
 				var s = String(p.team+tV);
 				
 				return line(p.period.map(function(d){
-
+						//console.log(d.dateObj,d[s])
 					return {
 						date:d.dateObj,
 						customVals:d[s]
@@ -282,50 +278,50 @@ function LineChart(customData,options) {
 			      .call(xAxis);
 
 			
+			      console.log("LOOK below for shaded ww2 areas")
+	// axis.append("rect")
+	// 		.attr("class","ww ww1")
+	// 		.attr("x",xscale(periods[0].values[periods[0].values.length-1].values.date))
+	// 		.attr("width",function(){
+	// 			var x1=xscale(periods[0].values[periods[0].values.length-1].values.date),
+	// 				x2=xscale(periods[1].values[0].values.date);
+	// 			return x2-x1;
+	// 		})
+	// 		.attr("y",-yscale.range()[0])
+	// 		.attr("height",yscale.range()[0])
+	// 		.style({
+	// 			fill:"url(#diagonalHatch)"
+	// 		})
 
-	axis.append("text")
-			.attr("class","ww ww1")
-			.attr("x",xscale(periods[2].values[periods[2].values.length-1].dateObj))
-			.attr("y",0)
-			.attr("dx",2)
-			.attr("dy",-2)
-			.text("WW1")
+	// axis.append("text")
+	// 		.attr("class","ww ww1")
+	// 		.attr("x",xscale(periods[0].values[periods[0].values.length-1].values.date))
+	// 		.attr("y",0)
+	// 		.attr("dx",2)
+	// 		.attr("dy",-2)
+	// 		.text("WW1")
 
-	axis.append("rect")
-			.attr("class","ww ww2")
-			.attr("x",xscale(periods[2].values[periods[2].values.length-1].dateObj))
-			.attr("width",function(){
-				var x1=xscale(periods[2].values[periods[2].values.length-1].dateObj),
-					x2=xscale(periods[1].values[0].dateObj);
-				return x2-x1;
-			})
-			.attr("y",-yscale.range()[0])
-			.attr("height",yscale.range()[0])
-			.style({
-				fill:"url(#diagonalHatch)"
-			})
+	// axis.append("rect")
+	// 		.attr("class","ww ww2")
+	// 		.attr("x",xscale(periods[1].values[periods[1].values.length-1].values.date))
+	// 		.attr("width",function(){
+	// 			var x1=xscale(periods[1].values[periods[1].values.length-1].values.date),
+	// 				x2=xscale(periods[2].values[0].values.date);
+	// 			return x2-x1;
+	// 		})
+	// 		.attr("y",-yscale.range()[0])
+	// 		.attr("height",yscale.range()[0])
+	// 		.style({
+	// 			fill:"url(#diagonalHatch)"
+	// 		})
 
-	axis.append("text")
-			.attr("class","ww ww2")
-			.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
-			.attr("y",0)
-			.attr("dx",2)
-			.attr("dy",-2)
-			.text("WW2")
-
-	axis.append("rect")
-			.attr("class","ww ww2")
-			.attr("x",xscale(periods[1].values[periods[1].values.length-1].dateObj))
-			.attr("width",function(){
-				var x1=xscale(periods[1].values[periods[1].values.length-1].dateObj),
-					x2=xscale(periods[0].values[0].dateObj);
-				return x2-x1;
-			})
-			.attr("y",-yscale.range()[0])
-			.attr("height",yscale.range()[0])
-			.style({
-				fill:"url(#diagonalHatch)"
-			})
+	// axis.append("text")
+	// 		.attr("class","ww ww2")
+	// 		.attr("x",xscale(periods[1].values[periods[1].values.length-1].values.date))
+	// 		.attr("y",0)
+	// 		.attr("dx",2)
+	// 		.attr("dy",-2)
+	// 		.text("WW2")
 
 	this.update=update;
 

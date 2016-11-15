@@ -1,4 +1,7 @@
 .all-series {
+	position: relative;
+	margin-bottom: 1%;
+	background-color:#FFF;
 	
 	.timeline-chart {
 		
@@ -16,7 +19,6 @@
 				}
 				text.status {
 					@include fs-header(2);
-					
 					font-size: 14px;
 				}
 				.series line {
