@@ -1,49 +1,64 @@
 var date_format = d3.time.format("%d %b %Y");
 
 
-function ScorersCareerChart(data,options) {
+function ScorersCareerChart(dataIn,options,players) {
+
+	console.log(players)
 
 	var margins={ top:1, right:0, bottom:0, left: 1 }
 	var xscale, yscale;
 	var newChart = d3.select(options.container).append("div").attr("class","small-multiple-holder")
 
+	//var goalsData = dataIn.values
 
-	for (var i=0; i < data.length; i++){
-		var d = data[i]
+	console.log(dataIn)
+
+	for (var i=0; i < dataIn.length; i++){
+
+		var data = dataIn[i]
 	
-		var d3StartDate = date_format(d.startDate);
-		var d3EndDate = date_format(d.endDate);
+		var d3StartDate = date_format(data.startDate);
+		var d3EndDate = date_format(data.endDate);
 
-		var startObj = { teamGoals: 0 , date: d3StartDate }
-		var endObj = { teamGoals: 0 , date: d3EndDate }
 
-		var lineData = getLineData(startObj, endObj, d)
+		var startObj = { teamGoals: 0 , dateObj: data.startDate }
+		var endObj = { teamGoals: 0 , dateObj: data.endDate }
+
+		var lineData = getLineData(startObj, endObj, data.values)
+
 		
-		var x = d3.time.scale().domain([d3StartDate,d3EndDate]).range([0, options.width]);
-		var y = d3.scale.linear().domain([0, options.maxGoals]).range([options.height, 0]);
+		 var mindate = new Date(2012,0,1),
+            maxdate = new Date(2012,0,31); 
+            
+        var xScale = d3.time.scale().domain([data.startDate , data.endDate]).range([0, options.width]); 		
 
-		var xscale=d3.scale.linear().domain([d3StartDate,d3EndDate]).rangeRound([0,options.width-(margins.left+margins.right)]),
-		yscale=d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]).nice();
+
+		var yscale=d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]).nice();
+	
 
 		var valueline = d3.svg.line()
-		    .x(function(d) { return x(d.date); })
-		    .y(function(d) { return y(d.teamGoals); });
+		    .x(function(d) { return xScale(d.dateObj); })
+		    .y(function(d) { return yscale(d.teamGoals); });
+
+
+
 
 		// xscale.domain(d3Date);
 		// yscale.domain(options.maxGoals);
 		// xscale.range([0,options.width-(margins.left+margins.right)]);
 		// yscale.range([0,options.height-(margins.top+margins.bottom)]);
 
-		var valueline = d3.svg.line()
-		    .x(function(d) { return x(d.date); })
-		    .y(function(d) { return y(d.teamGoals); });
+
+
 
 		var newSmallChart = newChart.append("div")
 			.attr("class","small-multiple")
-			.attr("id", function(d){ return "sm_"+data[i].key})
+			.attr("id", function(d){ return "sm_"+data.key})
 			.style("height", options.height+"px")
 			.style("width", options.width+"px")
 			.style("background-color","#EEE")
+
+		var circleCount;	
 
 		var svg = newSmallChart.append("svg")
 			.attr("width","100%")
@@ -52,14 +67,31 @@ function ScorersCareerChart(data,options) {
 		career_g=svg.append("g")
 					.attr("class","career")
 					.attr("transform","translate("+(margins.left)+","+margins.top+")"),
-
-		career_g.append("path")
-        .attr("class", "line")
-        .attr("d", valueline(lineData));
-						
 		axes=svg.append("g")
 			.attr("class","axes")
-			.attr("transform","translate("+(margins.left)+","+margins.top+")")	
+			.attr("transform","translate("+(margins.left)+","+margins.top+")")
+
+		career_g.append("path")
+	        .attr("class", function(d){ return "line "+data.team } )
+	        .attr("d", valueline(lineData));
+						
+		career_g.append("text")
+			.attr("class","sm-caption")
+			.text(function(d){  return data.values[0].season  }) 
+			.attr("x", margins.left)
+			.attr("y", 10)
+
+
+
+		svg.selectAll("circle").data(data.values).enter()
+			  .append("circle")
+			  .attr("cx",function(d,i) {return xScale(d.dateObj);})
+			  .attr("cy",function(d,i) { console.log("adding a circle");  return yscale(i);})
+			  .attr("r",function(d,i) {return 3;})		
+
+		
+
+
 
 
 
@@ -183,26 +215,24 @@ function ScorersCareerChart(data,options) {
 
 	}
 
-function getLineData(startObj, endObj,  dataIn ){
+	function getLineData(startObj, endObj,  dataIn ){
 
-	var tempArr = [];
-	startObj.scorer = endObj.scorer = dataIn.values[0].scorer
-	startObj.oppoGoals = endObj.oppoGoals = 0
-	startObj.teamGoals = endObj.teamGoals = 0
+		var tempArr = [];
+			startObj.scorer = endObj.scorer = dataIn.scorer
+			startObj.oppoGoals = endObj.oppoGoals = 0
+			startObj.teamGoals = endObj.teamGoals = 0
 
-	tempArr.push (startObj);
+		tempArr.push (startObj);
 
-	for (var i=0; i< dataIn.values.length; i++){
+		for (var i=0; i< dataIn.length; i++){
 
-		tempArr.push(dataIn.values[i])
+				tempArr.push(dataIn[i])
+		}
+
+		tempArr.push (endObj);
+
+		return tempArr;
 	}
-
-	tempArr.push (startObj);
-
-	console.log(tempArr)
-
-	return tempArr;
-}
 
 }
 

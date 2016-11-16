@@ -392,16 +392,19 @@ function modelPlayerChartsData(players){
     _.each(scorers, function(a){
         
         _.each(a, function(o,k){
+
             o.startDate = getSeasonExtent("start", o.key)
             o.endDate = getSeasonExtent("end", o.key)
             o.player = o.values[0].scorer
             o.team = o.values[0].goalTo
 
                 _.each(o.values, function(obj){
+                    console.log(obj)
+                    obj.dateObj = obj.values.dateObj
                     obj.teamGoals = o.team == "Liverpool" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN
                     obj.oppoGoals = o.team == "Everton" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN  
                 })
-                  
+             
             
         })
     })
@@ -415,7 +418,7 @@ function addPlayerCharts(a){
     var options = { height: (grid.row_height * 2), width: ( grid.column_width*2 ), margin: grid.margin, gutter: grid.gutter,  maxGoals: 6 , container: "#scorers"}
 
     _.each(a, function(o){
-        var smallMultiple = new CareerChart(o,options)
+        var smallMultiple = new CareerChart(o,options,players)
       
     })
 
@@ -425,9 +428,6 @@ function addPlayerCharts(a){
 }
 
 
-function addCareerCharts(a){
-
-}
 
 
 

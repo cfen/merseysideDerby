@@ -11,4 +11,21 @@
 .small-multiple{
 	margin: 0 0 12px 20px;
 	float:left;
+
+	 .line{
+	 	stroke:none;
+	 	
+	 }
+	 .Everton{
+	 	fill: $Everton;
+	 }
+
+	 .Liverpool{
+	 	fill: $Liverpool;
+	 }
+}
+
+.sm-caption{
+	@include fs-textSans(1);
+	color: rgb(181,181,181)
 }
