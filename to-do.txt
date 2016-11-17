@@ -1,0 +1,10 @@
+Page
+•Move into gv-flex layout
+
+Line graph red cards
+•Make graph start near first red card
+•Add y axis
+
+Player charts
+•Add images
+

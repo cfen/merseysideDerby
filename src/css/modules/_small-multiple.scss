@@ -9,23 +9,45 @@
 	}
 }
 .small-multiple{
-	margin: 0 0 12px 20px;
+	margin: 0 20px 12px 0;
 	float:left;
 
 	 .line{
-	 	stroke:none;
-	 	
+	 	stroke-width:2px;
 	 }
 	 .Everton{
-	 	fill: $Everton;
+	 	stroke: $Everton;
+	 	fill: $Everton_rgba;
 	 }
 
 	 .Liverpool{
-	 	fill: $Liverpool;
+	 	stroke: $Liverpool;
+	 	fill: $Liverpool_rgba;
 	 }
-}
+
+	 circle{
+		fill:  $Liverpool;
+	}
+
+	.tick{
+		stroke-width:1px;
+		@include fs-textSans(1);
+		fill: $axis-neutral;
+		shape-rendering: crispEdges;
+		stroke-dasharray: 1, 5;
+	}
+
+	.axes path, .axes line {
+		    fill: none;
+		    stroke: $axis-neutral;
+		    shape-rendering: crispEdges;
+		}
+	}
+
+
 
 .sm-caption{
 	@include fs-textSans(1);
-	color: rgb(181,181,181)
+	color: $axis-neutral;
+	fill: $neutral-2;
 }

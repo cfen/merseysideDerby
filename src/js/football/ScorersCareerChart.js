@@ -1,22 +1,25 @@
 var date_format = d3.time.format("%d %b %Y");
-
+var circleCount = 0;
 
 function ScorersCareerChart(dataIn,options,players) {
 
-	console.log(players)
+	var extraData = players.scorers;
 
-	var margins={ top:1, right:0, bottom:0, left: 1 }
-	var xscale, yscale;
+	var extraDataObject;
+
+
+
+	var margins={ top:0, right:0, bottom:12, left: 1 }
+	var padding= 2;
+	var xscale, yScale;
 	var newChart = d3.select(options.container).append("div").attr("class","small-multiple-holder")
-
+	var cRadius = 2.5;
 	//var goalsData = dataIn.values
-
-	console.log(dataIn)
 
 	for (var i=0; i < dataIn.length; i++){
 
 		var data = dataIn[i]
-	
+		
 		var d3StartDate = date_format(data.startDate);
 		var d3EndDate = date_format(data.endDate);
 
@@ -32,62 +35,77 @@ function ScorersCareerChart(dataIn,options,players) {
             
         var xScale = d3.time.scale().domain([data.startDate , data.endDate]).range([0, options.width]); 		
 
-
-		var yscale=d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]).nice();
+		var yScale=d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]).nice();
 	
+		var yAxisScale = d3.scale.linear().domain([0, options.maxGoals]).range([options.height-(margins.top+margins.bottom),0]);
 
 		var valueline = d3.svg.line()
 		    .x(function(d) { return xScale(d.dateObj); })
-		    .y(function(d) { return yscale(d.teamGoals); });
-
-
-
+		    .y(function(d) { return yScale(d.teamGoals); });
 
 		// xscale.domain(d3Date);
-		// yscale.domain(options.maxGoals);
+		// yScale.domain(options.maxGoals);
 		// xscale.range([0,options.width-(margins.left+margins.right)]);
-		// yscale.range([0,options.height-(margins.top+margins.bottom)]);
+		// yScale.range([0,options.height-(margins.top+margins.bottom)]);
 
+		var xAxis = d3.svg.axis().scale(xScale);
 
-
+        var yAxis = d3.svg.axis()
+                  .scale(yScale)
+                  .orient("right")
+                  .tickSize(options.width+1) //function(d,i) { return i%2 ? 5 : 2;}
+                  .ticks(options.maxGoals-1);          
 
 		var newSmallChart = newChart.append("div")
 			.attr("class","small-multiple")
 			.attr("id", function(d){ return "sm_"+data.key})
 			.style("height", options.height+"px")
 			.style("width", options.width+"px")
-			.style("background-color","#EEE")
-
-		var circleCount;	
 
 		var svg = newSmallChart.append("svg")
 			.attr("width","100%")
-			.attr("height","100%")	
+			.attr("height",options.height + margins.bottom)	
 
 		career_g=svg.append("g")
 					.attr("class","career")
 					.attr("transform","translate("+(margins.left)+","+margins.top+")"),
-		axes=svg.append("g")
-			.attr("class","axes")
-			.attr("transform","translate("+(margins.left)+","+margins.top+")")
+		
 
 		career_g.append("path")
 	        .attr("class", function(d){ return "line "+data.team } )
 	        .attr("d", valueline(lineData));
-						
-		career_g.append("text")
+
+	    axes=career_g.append("g")
+			.attr("class","axes")
+			.attr("transform","translate(-2, -1)").call(yAxis)
+
+
+
+		career_g.selectAll("circle").data(data.values).enter()
+			  .append("circle")
+			  .attr("r", function(d,i) {return cRadius;})
+			  .attr("cx",function(d,i) {return xScale(d.dateObj);})
+			  .attr("cy",function(d,i) { 
+			  		
+			  		for(var k = 0; k<d.teamGoals; k++){
+			  			return yScale(k)-(cRadius/2)
+			  		}
+
+			  	// 	if (data.values[i-1]) {
+			  	// 		console.log(d.teamGoals)
+			  	// 		d.dateObj == data.values[i-1].dateObj ? circleCount++ : circleCount = 0;
+			  	// 		//console.log(d.dateObj, data.values[i-1].dateObj, circleCount)
+
+			  	// 	}
+			  	// return yScale(circleCount)-(cRadius/2);
+			  })
+			  ;
+
+		svg.append("text")
 			.attr("class","sm-caption")
 			.text(function(d){  return data.values[0].season  }) 
 			.attr("x", margins.left)
-			.attr("y", 10)
-
-
-
-		svg.selectAll("circle").data(data.values).enter()
-			  .append("circle")
-			  .attr("cx",function(d,i) {return xScale(d.dateObj);})
-			  .attr("cy",function(d,i) { console.log("adding a circle");  return yscale(i);})
-			  .attr("r",function(d,i) {return 3;})		
+			.attr("y", options.height + padding)		
 
 		
 
@@ -123,7 +141,7 @@ function ScorersCareerChart(dataIn,options,players) {
 
 			// 	var match=findBar(xscale.invert(coord[0]-margins.left))
 			// 	if(match) {
-			// 		tooltip.show(match,xscale(match[INDEX]),yscale.range()[0]);
+			// 		tooltip.show(match,xscale(match[INDEX]),yScale.range()[0]);
 			// 		highlightMatch(match);
 			// 	}
 				

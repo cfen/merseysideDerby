@@ -76,8 +76,8 @@ function LineChart(customData,options) {
 			   
 			    	return yscale(d.customVals); 
 			    })
-			    //.interpolate("basis");
-			    .interpolate("step-after");
+			    .interpolate("basis");
+			    //.interpolate("step-after");
 
 	
 	// var notes=timeline_g

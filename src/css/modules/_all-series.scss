@@ -13,9 +13,10 @@
 			.team {
 				path {
 					fill:none;
-					stroke-width:1;
-					shape-rendering: crispEdges;
+					stroke-width:2;
 					stroke-linecap:square;
+					shape-rendering:crispEdges;
+					vector-effect: non-scaling-stroke;
 				}
 				text.status {
 					@include fs-header(2);
@@ -24,14 +25,15 @@
 				.series line {
 					fill:none;
 					stroke:#333;
-					stroke-width:1;
+					stroke-width:2;
 					shape-rendering: crispEdges;
 					stroke-opacity:0;
 				}
 				.series line.highlight {
-					stroke-width:1;
+					stroke-width:2;
 					stroke:#ddd;
 					stroke-opacity:1;
+
 				}
 			}
 			.Liverpool {

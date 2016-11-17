@@ -1,19 +1,38 @@
-$Liverpool:#d61d00;
-$Everton:#005689;//008751;
-$Liverpool_rgba: rgba(65, 105, 225,0.5);
-$Everton_rgba: rgba(255, 155, 11,0.5);
-
 @import "fonts";
 @import "palette";
 @import "mq";
 @import "general";
 @import "share";
 
+
+$neutral-1: map-get($pasteup-palette, 'neutral-1');
+$neutral-2: map-get($pasteup-palette, 'neutral-2');
+$neutral-3: map-get($pasteup-palette, 'neutral-3');
+$neutral-4: map-get($pasteup-palette, 'neutral-4');
+$neutral-5: map-get($pasteup-palette, 'neutral-5');
+$neutral-6: map-get($pasteup-palette, 'neutral-6');
+$neutral-7: map-get($pasteup-palette, 'neutral-7');
+$neutral-8: map-get($pasteup-palette, 'neutral-8');
+$news-main-1: map-get($pasteup-palette, 'news-main-1');
+$news-main-2: map-get($pasteup-palette, 'news-main-2');
+$features-main-1:map-get($pasteup-palette, 'features-main-1');
+$features-main-2:map-get($pasteup-palette, 'features-main-2');
+$features-main-3:map-get($pasteup-palette, 'features-main-3');
+$features-main-4:map-get($pasteup-palette, 'features-main-4');
+
+$Liverpool: #d61d00;
+$Everton: #005689;//008751;
+$Liverpool_rgba: rgba(214,29,0,0.6);
+$Everton_rgba: rgba(0,86,137,0.6);
+
+$axis-neutral: $neutral-3;
+
 @import 'modules/_grid-system';
 @import 'modules/_side-margins';
-@import 'modules/_all-series';
-@import 'modules/_small-multiple';
 
+@import 'modules/_all-series';
+@import 'modules/_custom-grid';
+@import 'modules/_small-multiple';
 
 * {
     box-sizing:border-box;

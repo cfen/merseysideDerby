@@ -7,7 +7,7 @@ import results from  '../assets/data/results.json!json'
 import Players from  '../assets/data/players.json!json'
 import dataUtils from './utils/data';
 
-
+import iframeMessenger from './lib/iframeMessenger'
 import share from './lib/share'
 import LineChart from './football/LineChart'
 import Scorers from './football/Scorers'
@@ -18,7 +18,7 @@ import { getDecade, getMonthNum, getDayNum, getSeason } from './lib/dateCustom'
 var grid={
     row_height: 36,
     column_width: 60,
-    gutter: 12,
+    baseline: 12,
     margin: 20
 };
 
@@ -50,9 +50,45 @@ export function init(el, context, config, mediator) {
     //     var network = shareEl.getAttribute('data-network');
     //     shareEl.addEventListener('click',() => shareFn(network));
     // });
+
+    iframeMessenger.enableAutoResize();
 }
 
+
+
+function addNewSubContainer(a,s){
+    
+    var slicesStr = ""
+
+    _.each(a, function(item){
+        console.log(item)
+        var newSubContainer = "<div class='dig-slice'>";
+        newSubContainer += "<div class='dig-slice__inner'>";
+        newSubContainer += "<div class='dig-slice__inner__left'>";
+        newSubContainer += "</div>"
+        newSubContainer += "<div class='dig-slice__inner__main'>"
+        newSubContainer += "<h4>"+item.name+"</h4>"
+        newSubContainer += "<div id="+s+"_"+item.id+">"
+        newSubContainer += "</div></div></div></div>";
+
+     slicesStr+= newSubContainer;   
+
+    })
+
+    document.getElementById(s).innerHTML = slicesStr;
+
+
+    
+
+}
+
+ 
+
 function initData(){
+
+  
+    addNewSubContainer(players.scorers, "scorers")
+
 
     var rawData = results.sheets.results.reverse();
 
@@ -399,7 +435,7 @@ function modelPlayerChartsData(players){
             o.team = o.values[0].goalTo
 
                 _.each(o.values, function(obj){
-                    console.log(obj)
+                    // console.log(obj.values)
                     obj.dateObj = obj.values.dateObj
                     obj.teamGoals = o.team == "Liverpool" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN
                     obj.oppoGoals = o.team == "Everton" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN  
@@ -415,9 +451,12 @@ function modelPlayerChartsData(players){
 }
 
 function addPlayerCharts(a){
-    var options = { height: (grid.row_height * 2), width: ( grid.column_width*2 ), margin: grid.margin, gutter: grid.gutter,  maxGoals: 6 , container: "#scorers"}
+    var options = { height: ((grid.row_height) * 2)+grid.baseline, width: ( grid.column_width*2 ), margin: grid.margin, gutter: grid.baseline,  maxGoals: 6 }
 
     _.each(a, function(o){
+
+        options.container = "#scorers_"+o[0].player
+
         var smallMultiple = new CareerChart(o,options,players)
       
     })

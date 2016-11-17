@@ -1,0 +1,75 @@
+.dig-slice {
+    background-color: #FFF;
+    &.dig-slice--filters {
+        background-color: #FFF;
+    }
+}
+
+.dig-slice__inner {
+    clear: left;
+    background-color: white;
+    box-sizing: border-box;
+    padding: $gs-baseline 0;
+
+
+    @include mq(tablet) {
+        padding:  $gs-gutter 0;
+    }
+
+    @each $bp in (tablet, desktop, leftCol, wide) {
+        @include mq($bp) {
+            max-width: map-get($mq-breakpoints, $bp);
+        }
+    }
+
+
+    @include mq(wide) {
+        margin: 0 80px;
+    }
+
+
+    .dig-slice--standfirst & {
+        margin-top: -10px;
+        @include mq(mobileLandscape) {
+            margin-top: -20px;
+        }
+        .dig-slice__inner__left {
+            max-width: 660px;
+        }
+    }
+
+    .dig-slice--filters & {
+        background-color: #FFF;
+        @include mq(mobileLandscape) {
+            padding-bottom: 5px;
+        }
+    }
+
+    
+}
+
+.dig-slice__inner__left {
+    position: relative;
+    margin-bottom: $gs-baseline;
+
+    @include mq(desktop) {
+        width: 160px;
+        float: left;
+    }
+
+    @include mq(leftCol) {
+        box-sizing: border-box;
+        padding-right: $gs-gutter;
+        width: 240px;
+        float: left;
+    }
+
+
+}
+
+.dig-slice__inner__main {
+  
+    overflow: hidden;
+    // border-top: 1px solid $neutral-4;
+
+}
