@@ -77,9 +77,6 @@ function addNewSubContainer(a,s){
 
     document.getElementById(s).innerHTML = slicesStr;
 
-
-    
-
 }
 
  
@@ -335,6 +332,8 @@ function tallyScorers(a){
                     t.push(tObj)                  
                  })
 
+                //console.log(o)
+
         } )
 
    return t     
@@ -426,9 +425,8 @@ function modelPlayerChartsData(players){
     });
 
     _.each(scorers, function(a){
-        
-        _.each(a, function(o,k){
-
+        var tempArr = [];
+        _.each(a, function(o,k){           
             o.startDate = getSeasonExtent("start", o.key)
             o.endDate = getSeasonExtent("end", o.key)
             o.player = o.values[0].scorer
@@ -437,18 +435,41 @@ function modelPlayerChartsData(players){
                 _.each(o.values, function(obj){
                     // console.log(obj.values)
                     obj.dateObj = obj.values.dateObj
-                    obj.teamGoals = o.team == "Liverpool" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN
+                    obj.teamGoals = o.team == "Liverpool" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN    
                     obj.oppoGoals = o.team == "Everton" ? obj.values.LiverpoolGoalsN : obj.values.EvertonGoalsN  
+                    obj.playerGoals = o.team == "Liverpool" ? getPlayerGoals(o.player, obj.values.liverpoolScorers) : getPlayerGoals(o.player, obj.values.evertonScorers);
+                    tempArr.push(obj.dateObj)
+
+                   // console.log(obj)
                 })
-             
-            
+
+            o.values = _.uniqBy(o.values,'dateObj')   
         })
+
+        a.dateObjArr = _.uniq(tempArr); 
+
     })
 
+    
     
     addPlayerCharts(scorers)
 
 }
+
+
+function getPlayerGoals(s,a){
+    
+
+
+    var n = 0;
+    
+        _.each(a, function(ss){
+            s == ss ? n++ : n = n;
+        })
+
+    return n;
+}
+
 
 function addPlayerCharts(a){
     var options = { height: ((grid.row_height) * 2)+grid.baseline, width: ( grid.column_width*2 ), margin: grid.margin, gutter: grid.baseline,  maxGoals: 6 }
@@ -460,9 +481,6 @@ function addPlayerCharts(a){
         var smallMultiple = new CareerChart(o,options,players)
       
     })
-
-
-
 
 }
 

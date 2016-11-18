@@ -44,7 +44,12 @@
 		}
 	}
 
+.sm-ux{
+	stroke: white;
+	fill: rgba($neutral-7, 0.9);
+	cursor: pointer;
 
+}
 
 .sm-caption{
 	@include fs-textSans(1);
